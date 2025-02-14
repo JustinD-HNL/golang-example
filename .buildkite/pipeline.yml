@@ -1,5 +1,25 @@
 steps:
-  - name: ":golang: test"
-    command: "go test -v ./..."
-  - name: ":golang: vet"
-    command: "go vet ./..."
+  - label: "NP | Check go formatting"
+    key: "np-check-formatting"
+    commands: |
+      set -euo pipefail
+      cd networkplanner
+      
+      echo --- Checking for formatting
+      make format
+      
+      cd ..
+      if ! git diff --exit-code; then
+          echo "Go files were not formatted correctly. Please commit the changes after running make format."
+          git diff  # Show the differences
+          exit 1
+      else
+          echo "All Go files are formatted correctly."
+      fi
+    plugins:
+      - docker#v5.9.0:
+          image: "golang:1.22.1"
+          network: "host"
+          shell: ["/bin/bash", "-c"]
+          environment:
+            - GO_BIN_PATH=/go/bin
